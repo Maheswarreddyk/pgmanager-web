@@ -1,0 +1,138 @@
+<div class="dashboard-header">
+  <h1>Dashboard</h1>
+  <div class="header-actions">
+    <button mat-button [matMenuTriggerFor]="propertyMenu" class="property-selector">
+      <mat-icon>apartment</mat-icon>
+      <span>{{ selectedProperty?.name || 'Select Property' }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #propertyMenu="matMenu">
+      <button mat-menu-item *ngFor="let property of properties" (click)="selectProperty(property)">
+        <mat-icon>apartment</mat-icon>
+        <span>{{ property.name }}</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="openPropertyDialog()">
+        <mat-icon>add</mat-icon>
+        <span>Add New Property</span>
+      </button>
+    </mat-menu>
+  </div>
+</div>
+
+<div class="dashboard-content" *ngIf="selectedProperty && stats">
+  <div class="stats-grid">
+    <mat-card class="stat-card income">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>attach_money</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>Total Income</h3>
+          <div class="stat-value">₹{{ stats.totalRevenue | number }}</div>
+          <div class="stat-label">Maximum possible earnings</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card collected">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>Collected Rent</h3>
+          <div class="stat-value">₹{{ stats.collectedRent | number }}</div>
+          <div class="stat-label">Total amount collected</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card pending">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>pending_actions</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>Pending Rent</h3>
+          <div class="stat-value">₹{{ stats.pendingRent | number }}</div>
+          <div class="stat-label">Rent amount pending</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card tenants">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>group</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>Total Tenants</h3>
+          <div class="stat-value">{{ stats.totalTenants }}</div>
+          <div class="stat-label">Current Active Tenants</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="charts-grid">
+    <mat-card class="chart-card">
+      <mat-card-content>
+        <div class="chart-header">
+          <div class="chart-title">
+            <mat-icon>pie_chart</mat-icon>
+            <h3>Occupancy Rate</h3>
+          </div>
+          <p class="chart-subtitle">Room occupancy across buildings</p>
+        </div>
+        <div class="occupancy-chart">
+          <canvas #occupancyChart></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <mat-card-content>
+        <div class="chart-header">
+          <div class="chart-title">
+            <mat-icon>receipt_long</mat-icon>
+            <h3>Recent Payments</h3>
+          </div>
+          <p class="chart-subtitle">Latest tenant transactions</p>
+        </div>
+        <table class="payments-table">
+          <thead>
+            <tr>
+              <th>Tenant</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let payment of recentPayments">
+              <td>{{ payment.tenantName }}</td>
+              <td>₹{{ payment.amount | number }}</td>
+              <td>{{ payment.date | date }}</td>
+              <td>
+                <span class="status-badge" [class]="payment.status.toLowerCase()">
+                  {{ payment.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<div class="no-property-message" *ngIf="!selectedProperty">
+  <mat-icon>apartment</mat-icon>
+  <h2>Welcome to PG Manager</h2>
+  <p>Please select or create a property to view your dashboard statistics.</p>
+  <button mat-flat-button color="primary" (click)="openPropertyDialog()">
+    <mat-icon>add</mat-icon>
+    <span>Add Your First Property</span>
+  </button>
+</div> 

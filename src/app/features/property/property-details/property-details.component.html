@@ -1,0 +1,62 @@
+<div class="property-details">
+  <div class="header">
+    <h1>Floors & Rooms</h1>
+    <button mat-raised-button color="primary" (click)="openAddRoomDialog()">
+      <mat-icon>add</mat-icon>
+      Add Room
+    </button>
+  </div>
+
+  <div class="floors-list">
+    <mat-accordion>
+      <mat-expansion-panel *ngFor="let floor of floors">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Floor {{floor.floor}}
+          </mat-panel-title>
+          <mat-panel-description>
+            {{floor.roomCount}} Rooms
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="rooms-container">
+          <div class="rooms-header">
+            <h3>Rooms</h3>
+          </div>
+
+          <div class="rooms-grid">
+            <div class="room-card" *ngFor="let room of floor.rooms">
+              <div class="room-header">
+                <h4>Room {{room.name}}</h4>
+                <div class="room-actions">
+                  <button mat-icon-button color="primary">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <div class="room-details">
+                <p>Capacity: {{room.roomCapacity}} persons</p>
+                <p>Rent: ₹{{room.amountPerHead}}/month</p>
+                <div class="occupancy-badge" [ngClass]="getOccupancyClass(room)">
+                  {{getOccupancyText(room)}}
+                </div>
+              </div>
+
+              <div class="room-actions-bottom">
+                <button mat-raised-button color="primary" [disabled]="room.tenantsCount >= room.roomCapacity">
+                  <mat-icon>person_add</mat-icon>
+                  Add Tenant
+                </button>
+                <button mat-stroked-button>
+                  <mat-icon>visibility</mat-icon>
+                  View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </div>
+</div> 
