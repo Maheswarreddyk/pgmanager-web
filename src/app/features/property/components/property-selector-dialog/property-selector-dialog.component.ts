@@ -1,154 +1,171 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDividerModule } from '@angular/material/divider';
-import { PropertyService } from '../../../../core/services/property.service';
-import { Property, CreatePropertyDto } from '../../../../core/models/property.model';
+import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { PropertyService } from '../../services/property.service';
+import { Property } from '../../models/property.model';
 
 @Component({
   selector: 'app-property-selector-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDividerModule
+    FormsModule,
+    DialogModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule
   ],
   template: `
-    <div class="dialog-container">
-      <h2 mat-dialog-title>{{ properties.length ? 'Select or Create Property' : 'Create Your First Property' }}</h2>
+    <p-dialog 
+      [(visible)]="visible" 
+      [modal]="true" 
+      [style]="{width: '500px'}"
+      [draggable]="false"
+      [resizable]="false"
+      (onHide)="onHide()">
       
-      <mat-dialog-content>
-        <div *ngIf="properties.length" class="property-select-section">
-          <h3>Select Existing Property</h3>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Choose Property</mat-label>
-            <mat-select (selectionChange)="onPropertySelected($event.value)">
-              <mat-option *ngFor="let property of properties" [value]="property">
-                {{ property.name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-          
-          <mat-divider class="my-4"></mat-divider>
-          <h3>Or Create New Property</h3>
+      <ng-template pTemplate="header">
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-building"></i>
+          <span class="font-bold">{{ mode === 'create' ? 'Add New Property' : 'Edit Property' }}</span>
+        </div>
+      </ng-template>
+
+      <div class="flex flex-column gap-3">
+        <div class="field">
+          <label for="name" class="block mb-2">Property Name</label>
+          <input 
+            id="name" 
+            type="text" 
+            pInputText 
+            [(ngModel)]="property.name" 
+            placeholder="Enter property name">
         </div>
 
-        <form [formGroup]="propertyForm" (ngSubmit)="onSubmit()">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Property Name</mat-label>
-            <input matInput formControlName="name" placeholder="Enter property name">
-            <mat-error *ngIf="propertyForm.get('name')?.hasError('required')">
-              Property name is required
-            </mat-error>
-          </mat-form-field>
+        <div class="field">
+          <label for="address" class="block mb-2">Address</label>
+          <input 
+            id="address" 
+            type="text" 
+            pInputText 
+            [(ngModel)]="property.address" 
+            placeholder="Enter property address">
+        </div>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Number of Floors</mat-label>
-            <input matInput type="number" formControlName="totalFloors" placeholder="Enter number of floors">
-            <mat-error *ngIf="propertyForm.get('totalFloors')?.hasError('required')">
-              Number of floors is required
-            </mat-error>
-            <mat-error *ngIf="propertyForm.get('totalFloors')?.hasError('min')">
-              Must be at least 1 floor
-            </mat-error>
-          </mat-form-field>
-        </form>
-      </mat-dialog-content>
+        <div class="field">
+          <label for="type" class="block mb-2">Property Type</label>
+          <p-dropdown
+            id="type"
+            [options]="propertyTypes"
+            [(ngModel)]="property.type"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select property type">
+          </p-dropdown>
+        </div>
+      </div>
 
-      <mat-dialog-actions align="end">
-        <button mat-button (click)="onCancel()" *ngIf="properties.length">Cancel</button>
-        <button mat-flat-button color="primary" (click)="onSubmit()" [disabled]="propertyForm.invalid">
-          Create Property
-        </button>
-      </mat-dialog-actions>
-    </div>
-  `,
-  styles: [`
-    .dialog-container {
-      padding: 1rem;
-      min-width: 400px;
-    }
-
-    .full-width {
-      width: 100%;
-    }
-
-    .my-4 {
-      margin: 2rem 0;
-    }
-
-    h3 {
-      margin-bottom: 1rem;
-      color: #666;
-    }
-
-    .property-select-section {
-      margin-bottom: 2rem;
-    }
-  `]
+      <ng-template pTemplate="footer">
+        <div class="flex justify-content-end gap-2">
+          <p-button 
+            label="Cancel" 
+            icon="pi pi-times" 
+            (onClick)="visible = false"
+            styleClass="p-button-text">
+          </p-button>
+          
+          <p-button 
+            [label]="mode === 'create' ? 'Create' : 'Update'" 
+            icon="pi pi-check" 
+            (onClick)="saveProperty()"
+            [loading]="loading">
+          </p-button>
+        </div>
+      </ng-template>
+    </p-dialog>
+  `
 })
-export class PropertySelectorDialogComponent implements OnInit {
-  propertyForm: FormGroup;
-  properties: Property[] = [];
+export class PropertySelectorDialogComponent {
+  visible = false;
+  loading = false;
+  mode: 'create' | 'edit' = 'create';
+  property: Property = {
+    id: '',
+    name: '',
+    address: '',
+    type: 'apartment',
+    totalRooms: 0,
+    occupiedRooms: 0,
+    imageUrl: ''
+  };
 
-  constructor(
-    private fb: FormBuilder,
-    private dialogRef: MatDialogRef<PropertySelectorDialogComponent>,
-    private propertyService: PropertyService
-  ) {
-    this.propertyForm = this.fb.group({
-      name: ['', Validators.required],
-      totalFloors: ['', [Validators.required, Validators.min(1)]]
-    });
-  }
+  propertyTypes = [
+    { label: 'Apartment', value: 'apartment' },
+    { label: 'House', value: 'house' },
+    { label: 'Villa', value: 'villa' },
+    { label: 'PG', value: 'pg' }
+  ];
 
-  ngOnInit() {
-    this.loadProperties();
-  }
+  constructor(private propertyService: PropertyService) {}
 
-  loadProperties() {
-    this.propertyService.getProperties().subscribe({
-      next: (properties) => {
-        this.properties = properties;
-      },
-      error: (error) => {
-        console.error('Error loading properties:', error);
-      }
-    });
-  }
-
-  onPropertySelected(property: Property) {
-    this.dialogRef.close({ action: 'select', property });
-  }
-
-  onSubmit() {
-    if (this.propertyForm.valid) {
-      const newProperty: CreatePropertyDto = {
-        name: this.propertyForm.value.name,
-        totalFloors: this.propertyForm.value.totalFloors
+  show(mode: 'create' | 'edit', property?: Property): void {
+    this.mode = mode;
+    if (property) {
+      this.property = { ...property };
+    } else {
+      this.property = {
+        id: '',
+        name: '',
+        address: '',
+        type: 'apartment',
+        totalRooms: 0,
+        occupiedRooms: 0,
+        imageUrl: ''
       };
-      this.propertyService.createProperty(newProperty).subscribe({
-        next: (property) => {
-          this.dialogRef.close({ action: 'create', property });
+    }
+    this.visible = true;
+  }
+
+  saveProperty(): void {
+    this.loading = true;
+    if (this.mode === 'create') {
+      this.propertyService.createProperty(this.property).subscribe({
+        next: () => {
+          this.visible = false;
+          this.loading = false;
         },
-        error: (error) => {
+        error: (error: Error) => {
           console.error('Error creating property:', error);
+          this.loading = false;
+        }
+      });
+    } else {
+      this.propertyService.updateProperty(this.property).subscribe({
+        next: () => {
+          this.visible = false;
+          this.loading = false;
+        },
+        error: (error: Error) => {
+          console.error('Error updating property:', error);
+          this.loading = false;
         }
       });
     }
   }
 
-  onCancel() {
-    this.dialogRef.close();
+  onHide(): void {
+    this.property = {
+      id: '',
+      name: '',
+      address: '',
+      type: 'apartment',
+      totalRooms: 0,
+      occupiedRooms: 0,
+      imageUrl: ''
+    };
   }
 } 

@@ -2,11 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RoomService, Room } from '../../../core/services/room.service';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { DialogService } from 'primeng/dynamicdialog';
 import { AddRoomDialogComponent } from './add-room-dialog/add-room-dialog.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 interface FloorRooms {
   floor: number;
@@ -17,15 +19,15 @@ interface FloorRooms {
 @Component({
   selector: 'app-property-details',
   templateUrl: './property-details.component.html',
-  styleUrls: ['./property-details.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatExpansionModule,
-    MatDialogModule
-  ]
+    ButtonModule,
+    DialogModule,
+    AccordionModule,
+    ToastModule
+  ],
+  providers: [DialogService, MessageService]
 })
 export class PropertyDetailsComponent implements OnInit {
   propertyId: string = '';
@@ -34,7 +36,8 @@ export class PropertyDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private roomService: RoomService,
-    private dialog: MatDialog
+    private dialogService: DialogService,
+    private messageService: MessageService
   ) {}
 
   ngOnInit() {
@@ -45,36 +48,54 @@ export class PropertyDetailsComponent implements OnInit {
   }
 
   loadRooms() {
-    this.roomService.getRoomsByPropertyId(this.propertyId).subscribe(rooms => {
-      // Group rooms by floor
-      const floorMap = new Map<number, Room[]>();
-      rooms.forEach(room => {
-        if (!floorMap.has(room.floor)) {
-          floorMap.set(room.floor, []);
-        }
-        floorMap.get(room.floor)?.push(room);
-      });
+    this.roomService.getRoomsByPropertyId(this.propertyId).subscribe({
+      next: (rooms) => {
+        // Group rooms by floor
+        const floorMap = new Map<number, Room[]>();
+        rooms.forEach(room => {
+          if (!floorMap.has(room.floor)) {
+            floorMap.set(room.floor, []);
+          }
+          floorMap.get(room.floor)?.push(room);
+        });
 
-      // Convert map to array and sort by floor number
-      this.floors = Array.from(floorMap.entries())
-        .map(([floor, rooms]) => ({
-          floor,
-          rooms,
-          roomCount: rooms.length
-        }))
-        .sort((a, b) => a.floor - b.floor);
+        // Convert map to array and sort by floor number
+        this.floors = Array.from(floorMap.entries())
+          .map(([floor, rooms]) => ({
+            floor,
+            rooms: rooms.map(room => ({ ...room, hover: false })), // Add hover state
+            roomCount: rooms.length
+          }))
+          .sort((a, b) => a.floor - b.floor);
+      },
+      error: (error) => {
+        console.error('Error loading rooms:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load rooms. Please try again.'
+        });
+      }
     });
   }
 
   openAddRoomDialog() {
-    const dialogRef = this.dialog.open(AddRoomDialogComponent, {
+    const ref = this.dialogService.open(AddRoomDialogComponent, {
+      header: 'Add New Room',
       width: '500px',
-      data: { propertyId: this.propertyId }
+      data: { propertyId: this.propertyId },
+      contentStyle: { 'max-height': '500px', 'overflow': 'auto' },
+      baseZIndex: 10000
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    ref.onClose.subscribe((result) => {
       if (result) {
         this.loadRooms();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Room added successfully'
+        });
       }
     });
   }

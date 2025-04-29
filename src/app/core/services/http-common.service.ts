@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -16,8 +16,11 @@ export class HttpCommonService {
     });
   }
 
-  get<T>(url: string): Observable<T> {
-    return this.http.get<T>(url, { headers: this.getAuthHeaders() });
+  get<T>(url: string, options?: { params?: HttpParams }): Observable<T> {
+    return this.http.get<T>(url, { 
+      headers: this.getAuthHeaders(),
+      params: options?.params
+    });
   }
 
   post<T>(url: string, body: any): Observable<T> {

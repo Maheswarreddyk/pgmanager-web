@@ -1,216 +1,189 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { AuthService } from '../../core/auth/services/auth.service';
-import { PropertyService } from '../../core/services/property.service';
-import { PropertySelectorDialogComponent } from '../property/components/property-selector-dialog/property-selector-dialog.component';
-import { Property, PropertyStats, Payment } from '../../core/models/property.model';
-import { Chart, registerables } from 'chart.js';
-Chart.register(...registerables);
+import { CardModule } from 'primeng/card';
+import { ChartModule } from 'primeng/chart';
+import { PropertyService } from '../property/services/property.service';
+import { TenantService } from '../tenant/services/tenant.service';
+import { PaymentService } from '../payment/services/payment.service';
+import { Property } from '../property/models/property.model';
+import { Tenant } from '../tenant/models/tenant.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterOutlet,
-    RouterLink,
-    ReactiveFormsModule,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatListModule,
-    MatIconModule,
-    MatButtonModule,
-    MatCardModule,
-    MatMenuModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDialogModule
-  ],
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+  imports: [CommonModule, CardModule, ChartModule],
+  template: `
+    <div class="grid">
+      <!-- Summary Cards -->
+      <div class="col-12 md:col-6 lg:col-3">
+        <p-card>
+          <div class="flex align-items-center justify-content-between">
+            <div>
+              <span class="block text-500 font-medium mb-3">Total Properties</span>
+              <div class="text-900 font-medium text-xl">{{ totalProperties }}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-building text-blue-500 text-xl"></i>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <p-card>
+          <div class="flex align-items-center justify-content-between">
+            <div>
+              <span class="block text-500 font-medium mb-3">Total Tenants</span>
+              <div class="text-900 font-medium text-xl">{{ totalTenants }}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-users text-green-500 text-xl"></i>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <p-card>
+          <div class="flex align-items-center justify-content-between">
+            <div>
+              <span class="block text-500 font-medium mb-3">Monthly Revenue</span>
+              <div class="text-900 font-medium text-xl">₹{{ monthlyRevenue }}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-money-bill text-purple-500 text-xl"></i>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <p-card>
+          <div class="flex align-items-center justify-content-between">
+            <div>
+              <span class="block text-500 font-medium mb-3">Vacant Rooms</span>
+              <div class="text-900 font-medium text-xl">{{ vacantRooms }}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-home text-orange-500 text-xl"></i>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Charts -->
+      <div class="col-12 lg:col-6">
+        <p-card header="Revenue Overview">
+          <p-chart type="line" [data]="revenueData" [options]="chartOptions"></p-chart>
+        </p-card>
+      </div>
+
+      <div class="col-12 lg:col-6">
+        <p-card header="Occupancy Rate">
+          <p-chart type="doughnut" [data]="occupancyData" [options]="chartOptions"></p-chart>
+        </p-card>
+      </div>
+    </div>
+  `
 })
-export class DashboardComponent implements OnInit, AfterViewInit {
-  @ViewChild('occupancyChart') occupancyChartRef!: ElementRef;
-  private occupancyChart: Chart | null = null;
-  
-  selectedProperty: Property | null = null;
-  properties: Property[] = [];
-  stats: PropertyStats | null = null;
-  recentPayments: Payment[] = [];
-  dateRangeForm: FormGroup;
+export class DashboardComponent implements OnInit {
+  totalProperties = 0;
+  totalTenants = 0;
+  monthlyRevenue = 0;
+  vacantRooms = 0;
+
+  revenueData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Revenue',
+        data: [65000, 59000, 80000, 81000, 56000, 55000],
+        fill: false,
+        borderColor: '#42A5F5',
+        tension: 0.4
+      }
+    ]
+  };
+
+  occupancyData = {
+    labels: ['Occupied', 'Vacant'],
+    datasets: [
+      {
+        data: [75, 25],
+        backgroundColor: ['#42A5F5', '#FFA726']
+      }
+    ]
+  };
+
+  chartOptions = {
+    plugins: {
+      legend: {
+        labels: {
+          color: '#495057'
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#495057'
+        },
+        grid: {
+          color: '#ebedef'
+        }
+      },
+      y: {
+        ticks: {
+          color: '#495057'
+        },
+        grid: {
+          color: '#ebedef'
+        }
+      }
+    }
+  };
 
   constructor(
-    private authService: AuthService,
     private propertyService: PropertyService,
-    private dialog: MatDialog,
-    public router: Router,
-    private fb: FormBuilder
-  ) {
-    this.dateRangeForm = this.fb.group({
-      startDate: [new Date(new Date().getFullYear(), new Date().getMonth(), 1)],
-      endDate: [new Date()]
-    });
-
-    // Temporary data for demo
-    this.recentPayments = [
-      {
-        tenantName: 'Priya Singh',
-        amount: 0,
-        date: new Date('2023-07-10'),
-        status: 'Pending'
-      },
-      {
-        tenantName: 'Vikram Mehta',
-        amount: 9000,
-        date: new Date('2023-07-08'),
-        status: 'Paid'
-      },
-      {
-        tenantName: 'Rahul Kumar',
-        amount: 4000,
-        date: new Date('2023-07-05'),
-        status: 'Partial'
-      },
-      {
-        tenantName: 'Rajesh Khanna',
-        amount: 0,
-        date: new Date('2023-07-05'),
-        status: 'Pending'
-      }
-    ];
-  }
+    private tenantService: TenantService,
+    private paymentService: PaymentService
+  ) {}
 
   ngOnInit(): void {
-    if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    this.loadProperties();
-    this.propertyService.selectedProperty$.subscribe(property => {
-      this.selectedProperty = property;
-      if (property) {
-        this.loadStats();
-      }
-    });
-
-    this.dateRangeForm.valueChanges.subscribe(() => {
-      if (this.selectedProperty) {
-        this.loadStats();
-      }
-    });
+    this.loadDashboardData();
   }
 
-  ngAfterViewInit() {
-    if (this.stats) {
-      this.createOccupancyChart();
-    }
-  }
-
-  private createOccupancyChart() {
-    if (!this.stats || !this.occupancyChartRef) return;
-
-    const ctx = this.occupancyChartRef.nativeElement.getContext('2d');
-    
-    if (this.occupancyChart) {
-      this.occupancyChart.destroy();
-    }
-
-    this.occupancyChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Occupied', 'Vacant'],
-        datasets: [{
-          data: [this.stats.occupiedRooms, this.stats.vacantRooms],
-          backgroundColor: ['#4361ee', '#ff9933'],
-          borderWidth: 0,
-          borderRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '75%',
-        plugins: {
-          legend: {
-            display: false
-          }
-        }
-      }
-    });
-  }
-
-  loadProperties() {
+  private loadDashboardData(): void {
+    // Load properties data
     this.propertyService.getProperties().subscribe({
       next: (properties) => {
-        this.properties = properties;
-        if (properties.length === 0) {
-          this.openPropertyDialog();
-        }
+        this.totalProperties = properties.length;
+        this.vacantRooms = properties.reduce((acc, property) => 
+          acc + (property.totalRooms - property.occupiedRooms), 0);
       },
       error: (error) => {
         console.error('Error loading properties:', error);
       }
     });
-  }
 
-  loadStats() {
-    if (!this.selectedProperty) return;
-
-    const { startDate, endDate } = this.dateRangeForm.value;
-    this.propertyService.getPropertyStats(
-      this.selectedProperty.id,
-      startDate,
-      endDate
-    ).subscribe({
-      next: (stats) => {
-        this.stats = stats;
-        this.createOccupancyChart();
+    // Load tenants data
+    this.tenantService.getTenants().subscribe({
+      next: (tenants) => {
+        this.totalTenants = tenants.length;
       },
       error: (error) => {
-        console.error('Error loading stats:', error);
+        console.error('Error loading tenants:', error);
       }
     });
-  }
 
-  openPropertyDialog() {
-    const dialogRef = this.dialog.open(PropertySelectorDialogComponent, {
-      width: '500px',
-      disableClose: this.properties.length === 0
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        if (result.action === 'select' || result.action === 'create') {
-          this.propertyService.selectProperty(result.property);
-          this.loadProperties();
-        }
+    // Load payments data
+    this.paymentService.getMonthlyRevenue().subscribe({
+      next: (revenue) => {
+        this.monthlyRevenue = revenue;
+      },
+      error: (error) => {
+        console.error('Error loading revenue:', error);
       }
     });
-  }
-
-  selectProperty(property: Property) {
-    this.propertyService.selectProperty(property);
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 } 

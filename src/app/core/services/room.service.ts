@@ -11,6 +11,7 @@ export interface Room {
   amountPerHead: number;
   facilityTypeIds: number[];
   tenantsCount: number;
+  hover?: boolean;
 }
 
 export interface CreateRoomRequest {

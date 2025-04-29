@@ -1,10 +1,10 @@
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { ButtonModule } from 'primeng/button';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RoomService } from '../../../../core/services/room.service';
 
@@ -17,18 +17,158 @@ enum FacilityType {
 
 @Component({
   selector: 'app-add-room-dialog',
-  templateUrl: './add-room-dialog.component.html',
-  styleUrls: ['./add-room-dialog.component.scss'],
+  template: `    
+    <form [formGroup]="roomForm" (ngSubmit)="onSubmit()" class="p-fluid">
+      <div class="flex flex-column gap-4">
+        <div class="field">
+          <label for="name" class="block text-900 font-medium mb-2">Room Number</label>
+          <div class="p-input-icon-left w-full">
+            <i class="pi pi-home"></i>
+            <input 
+              id="name" 
+              type="text" 
+              pInputText 
+              formControlName="name" 
+              placeholder="e.g. 101"
+              class="w-full pl-5"
+              [ngClass]="{'ng-invalid ng-dirty': roomForm.get('name')?.invalid && roomForm.get('name')?.touched}">
+          </div>
+          <small class="p-error block" *ngIf="roomForm.get('name')?.invalid && roomForm.get('name')?.touched">
+            Room number is required
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="floor" class="block text-900 font-medium mb-2">Floor Number</label>
+          <div class="p-input-icon-left w-full">
+            <i class="pi pi-building"></i>
+            <p-inputNumber 
+              id="floor" 
+              formControlName="floor" 
+              [showButtons]="true" 
+              [min]="1"
+              placeholder="e.g. 1"
+              styleClass="w-full">
+            </p-inputNumber>
+          </div>
+          <small class="p-error block" *ngIf="roomForm.get('floor')?.invalid && roomForm.get('floor')?.touched">
+            Floor number must be greater than 0
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="roomCapacity" class="block text-900 font-medium mb-2">Room Capacity</label>
+          <div class="p-input-icon-left w-full">
+            <i class="pi pi-users"></i>
+            <p-inputNumber 
+              id="roomCapacity" 
+              formControlName="roomCapacity" 
+              [showButtons]="true" 
+              [min]="1"
+              placeholder="e.g. 2"
+              styleClass="w-full">
+            </p-inputNumber>
+          </div>
+          <small class="p-error block" *ngIf="roomForm.get('roomCapacity')?.invalid && roomForm.get('roomCapacity')?.touched">
+            Room capacity must be greater than 0
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="amountPerHead" class="block text-900 font-medium mb-2">Amount per Head</label>
+          <div class="p-input-icon-left w-full">
+            <i class="pi pi-money-bill"></i>
+            <p-inputNumber 
+              id="amountPerHead" 
+              formControlName="amountPerHead" 
+              mode="currency" 
+              currency="INR"
+              [min]="0"
+              placeholder="e.g. 5000"
+              styleClass="w-full">
+            </p-inputNumber>
+          </div>
+          <small class="p-error block" *ngIf="roomForm.get('amountPerHead')?.invalid && roomForm.get('amountPerHead')?.touched">
+            Amount must be greater than or equal to 0
+          </small>
+        </div>
+
+        <div class="field">
+          <label class="block text-900 font-medium mb-3">Facilities</label>
+          <div class="flex flex-wrap gap-4">
+            <div *ngFor="let facility of facilities" class="flex align-items-center">
+              <p-checkbox
+                [inputId]="'facility_' + facility.id"
+                [value]="facility.id"
+                [name]="'facility_' + facility.id"
+                [(ngModel)]="selectedFacilities"
+                [ngModelOptions]="{standalone: true}">
+              </p-checkbox>
+              <label [for]="'facility_' + facility.id" class="ml-2 cursor-pointer">{{facility.name}}</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-content-end gap-2 mt-4">
+        <p-button 
+          label="Cancel" 
+          icon="pi pi-times" 
+          (onClick)="onCancel()"
+          styleClass="p-button-text">
+        </p-button>
+        <p-button 
+          label="Add Room" 
+          icon="pi pi-check" 
+          type="submit"
+          [loading]="isSubmitting"
+          [disabled]="!roomForm.valid || isSubmitting">
+        </p-button>
+      </div>
+    </form>
+  `,
+  styles: [`
+    :host ::ng-deep {
+      .p-inputnumber {
+        width: 100%;
+      }
+      
+      .p-inputnumber-input {
+        width: 100%;
+        padding-left: 2.5rem !important;
+      }
+      
+      .p-input-icon-left {
+        position: relative;
+        display: block;
+        
+        i {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 1;
+        }
+        
+        .p-inputtext {
+          padding-left: 2.5rem;
+        }
+      }
+      
+      .p-checkbox {
+        display: inline-flex;
+        cursor: pointer;
+      }
+    }
+  `],
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatCheckboxModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    ButtonModule,
+    InputNumberModule,
+    InputTextModule,
+    CheckboxModule
   ]
 })
 export class AddRoomDialogComponent {
@@ -39,35 +179,28 @@ export class AddRoomDialogComponent {
     { id: FacilityType.TV, name: 'TV' }
   ];
   selectedFacilities: number[] = [];
+  isSubmitting = false;
 
   constructor(
-    private dialogRef: MatDialogRef<AddRoomDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { propertyId: string },
+    private dialogRef: DynamicDialogRef,
+    private config: DynamicDialogConfig,
     private fb: FormBuilder,
     private roomService: RoomService
   ) {
     this.roomForm = this.fb.group({
       name: ['', Validators.required],
-      floor: ['', [Validators.required, Validators.min(1)]],
-      roomCapacity: ['', [Validators.required, Validators.min(1)]],
-      amountPerHead: ['', [Validators.required, Validators.min(0)]]
+      floor: [1, [Validators.required, Validators.min(1)]],
+      roomCapacity: [1, [Validators.required, Validators.min(1)]],
+      amountPerHead: [0, [Validators.required, Validators.min(0)]]
     });
-  }
-
-  toggleFacility(facilityId: number): void {
-    const index = this.selectedFacilities.indexOf(facilityId);
-    if (index === -1) {
-      this.selectedFacilities.push(facilityId);
-    } else {
-      this.selectedFacilities.splice(index, 1);
-    }
   }
 
   onSubmit() {
     if (this.roomForm.valid) {
+      this.isSubmitting = true;
       const formValue = this.roomForm.value;
       const request = {
-        propertyId: this.data.propertyId,
+        propertyId: this.config.data.propertyId,
         name: formValue.name,
         sharingType: formValue.roomCapacity > 1 ? 1 : 0, // 1 for shared, 0 for single
         floor: formValue.floor,
@@ -81,7 +214,7 @@ export class AddRoomDialogComponent {
         },
         error: (error) => {
           console.error('Error creating room:', error);
-          // Handle error (show message to user)
+          this.isSubmitting = false;
         }
       });
     }

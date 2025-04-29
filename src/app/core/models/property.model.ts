@@ -3,11 +3,11 @@ export interface Property {
   name: string;
   totalFloors: number;
   roomCount: number;
-}
-
-export interface CreatePropertyDto {
-  name: string;
-  totalFloors: number;
+  address: string;
+  imageUrl?: string;
+  ownerId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface PropertyStats {
@@ -25,9 +25,9 @@ export interface PropertyStats {
   expensesByCategory: { category: string; amount: number }[];
 }
 
-export interface Payment {
-  tenantName: string;
-  amount: number;
-  date: Date;
-  status: 'Paid' | 'Pending' | 'Partial';
+export interface CreatePropertyDto {
+  name: string;
+  totalFloors: number;
+  address: string;
+  imageUrl?: string;
 } 

@@ -1,10 +1,24 @@
 /* You can add global styles to this file, and also import other style files */
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
-html, body {
-  height: 100%;
+/* PrimeNG Theme */
+@import "primeng/resources/themes/saga-blue/theme.css";
+@import "primeng/resources/primeng.css";
+@import "primeicons/primeicons.css";
+@import "primeflex/primeflex.css";
+
+/* Custom Global Styles */
+:root {
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
 }
 
 * {
@@ -58,4 +72,438 @@ html, body {
 
 .gap-20 {
   gap: 20px;
+}
+
+/* Custom utility classes using PrimeFlex */
+.p-component {
+  font-family: var(--font-family);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-ground);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-hover);
+}
+
+/* Custom animations */
+.p-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.p-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom form styles */
+.p-inputtext:enabled:focus {
+  box-shadow: 0 0 0 0.2rem var(--primary-200);
+  border-color: var(--primary-500);
+}
+
+/* Custom button styles */
+.p-button {
+  transition: all 0.2s;
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Custom table styles */
+.p-datatable .p-datatable-tbody > tr {
+  transition: background-color 0.2s;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: var(--surface-hover);
+}
+
+/* Custom dialog styles */
+.p-dialog {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom sidebar styles */
+.p-sidebar {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  .p-sidebar-header {
+    padding: 1rem;
+  }
+  
+  .p-sidebar-content {
+    padding: 0;
+  }
+}
+
+/* Custom card styles */
+.p-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom input styles */
+.p-inputtext {
+  border-radius: 6px;
+}
+
+/* Custom dropdown styles */
+.p-dropdown {
+  border-radius: 6px;
+}
+
+/* Custom calendar styles */
+.p-calendar {
+  border-radius: 6px;
+}
+
+/* Custom toast styles */
+.p-toast {
+  opacity: 0.9;
+}
+
+/* Custom tooltip styles */
+.p-tooltip {
+  opacity: 0.9;
+}
+
+/* Custom progress bar styles */
+.p-progressbar {
+  border-radius: 4px;
+}
+
+/* Custom menu styles */
+.p-menu {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom tab styles */
+.p-tabview .p-tabview-nav {
+  border-radius: 8px 8px 0 0;
+}
+
+/* Custom panel styles */
+.p-panel {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom message styles */
+.p-message {
+  border-radius: 8px;
+}
+
+/* Custom file upload styles */
+.p-fileupload {
+  border-radius: 8px;
+}
+
+/* Custom rating styles */
+.p-rating {
+  gap: 0.5rem;
+}
+
+/* Custom slider styles */
+.p-slider {
+  border-radius: 4px;
+}
+
+/* Custom toggle button styles */
+.p-togglebutton {
+  border-radius: 6px;
+}
+
+/* Custom checkbox styles */
+.p-checkbox {
+  border-radius: 4px;
+}
+
+/* Custom radio button styles */
+.p-radiobutton {
+  border-radius: 50%;
+}
+
+/* Custom input switch styles */
+.p-inputswitch {
+  border-radius: 12px;
+}
+
+/* Custom select button styles */
+.p-selectbutton {
+  border-radius: 6px;
+}
+
+/* Custom split button styles */
+.p-splitbutton {
+  border-radius: 6px;
+}
+
+/* Custom speed dial styles */
+.p-speeddial {
+  border-radius: 50%;
+}
+
+/* Custom context menu styles */
+.p-contextmenu {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom overlay panel styles */
+.p-overlaypanel {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom confirm dialog styles */
+.p-confirmdialog {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom color picker styles */
+.p-colorpicker {
+  border-radius: 8px;
+}
+
+/* Custom editor styles */
+.p-editor-container {
+  border-radius: 8px;
+}
+
+/* Custom tree styles */
+.p-tree {
+  border-radius: 8px;
+}
+
+/* Custom organization chart styles */
+.p-organizationchart {
+  border-radius: 8px;
+}
+
+/* Custom timeline styles */
+.p-timeline {
+  border-radius: 8px;
+}
+
+/* Custom steps styles */
+.p-steps {
+  border-radius: 8px;
+}
+
+/* Custom breadcrumb styles */
+.p-breadcrumb {
+  border-radius: 8px;
+}
+
+/* Custom menu bar styles */
+.p-menubar {
+  border-radius: 8px;
+}
+
+/* Custom mega menu styles */
+.p-megamenu {
+  border-radius: 8px;
+}
+
+/* Custom panel menu styles */
+.p-panelmenu {
+  border-radius: 8px;
+  .p-panelmenu-header > a {
+    padding: 1rem;
+  }
+  
+  .p-panelmenu-content {
+    padding: 0;
+  }
+}
+
+/* Custom slide menu styles */
+.p-slidemenu {
+  border-radius: 8px;
+}
+
+/* Custom tiered menu styles */
+.p-tieredmenu {
+  border-radius: 8px;
+}
+
+/* Custom dock styles */
+.p-dock {
+  border-radius: 8px;
+}
+
+/* Custom tab menu styles */
+.p-tabmenu {
+  border-radius: 8px;
+}
+
+/* Custom paginator styles */
+.p-paginator {
+  border-radius: 8px;
+}
+
+/* Custom data view styles */
+.p-dataview {
+  border-radius: 8px;
+}
+
+/* Custom order list styles */
+.p-orderlist {
+  border-radius: 8px;
+}
+
+/* Custom pick list styles */
+.p-picklist {
+  border-radius: 8px;
+}
+
+/* Custom tree table styles */
+.p-treetable {
+  border-radius: 8px;
+}
+
+/* Custom virtual scroller styles */
+.p-virtualscroller {
+  border-radius: 8px;
+}
+
+/* Custom scroll panel styles */
+.p-scrollpanel {
+  border-radius: 8px;
+}
+
+/* Custom tab view styles */
+.p-tabview {
+  border-radius: 8px;
+}
+
+/* Custom accordion styles */
+.p-accordion {
+  border-radius: 8px;
+}
+
+/* Custom fieldset styles */
+.p-fieldset {
+  border-radius: 8px;
+}
+
+/* Custom panel styles */
+.p-panel {
+  border-radius: 8px;
+}
+
+/* Custom scroll top styles */
+.p-scrolltop {
+  border-radius: 50%;
+}
+
+/* Custom tooltip styles */
+.p-tooltip {
+  border-radius: 8px;
+}
+
+/* Custom block ui styles */
+.p-blockui {
+  border-radius: 8px;
+}
+
+/* Custom progress spinner styles */
+.p-progressspinner {
+  border-radius: 50%;
+}
+
+/* Custom skeleton styles */
+.p-skeleton {
+  border-radius: 8px;
+}
+
+/* Custom badge styles */
+.p-badge {
+  border-radius: 50%;
+}
+
+/* Custom tag styles */
+.p-tag {
+  border-radius: 4px;
+}
+
+/* Custom chip styles */
+.p-chip {
+  border-radius: 16px;
+}
+
+/* Custom avatar styles */
+.p-avatar {
+  border-radius: 50%;
+}
+
+/* Custom avatar group styles */
+.p-avatar-group {
+  border-radius: 50%;
+}
+
+/* Custom divider styles */
+.p-divider {
+  border-radius: 4px;
+}
+
+/* Custom scroll panel styles */
+.p-scrollpanel {
+  border-radius: 8px;
+}
+
+/* Custom splitter styles */
+.p-splitter {
+  border-radius: 8px;
+}
+
+/* Custom terminal styles */
+.p-terminal {
+  border-radius: 8px;
+}
+
+/* Custom timeline styles */
+.p-timeline {
+  border-radius: 8px;
+}
+
+/* Custom virtual scroller styles */
+.p-virtualscroller {
+  border-radius: 8px;
+}
+
+/* Custom toolbar styles */
+.p-toolbar {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  padding: 1rem;
+}
+
+/* Custom global styles */
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
 }

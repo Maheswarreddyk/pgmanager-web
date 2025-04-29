@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Property, PropertyStats, CreatePropertyDto } from '../models/property.model';
 import { environment } from '../../../environments/environment';
 import { HttpCommonService } from './http-common.service';
+import { HttpParams } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -40,7 +41,19 @@ export class PropertyService {
   }
 
   createProperty(property: CreatePropertyDto): Observable<Property> {
-    return this.httpCommon.post<Property>(this.API_URL, property);
+    return this.httpCommon.post<Property>(`${this.API_URL}/create`, property);
+  }
+
+  updateProperty(property: Property): Observable<Property> {
+    return this.httpCommon.put<Property>(`${this.API_URL}/update/${property.id}`, property);
+  }
+
+  getPropertyById(id: string): Observable<Property> {
+    return this.httpCommon.get<Property>(`${this.API_URL}/details/${id}`);
+  }
+
+  deleteProperty(id: string): Observable<void> {
+    return this.httpCommon.delete<void>(`${this.API_URL}/delete/${id}`);
   }
 
   selectProperty(property: Property) {
@@ -52,33 +65,11 @@ export class PropertyService {
     return this.selectedPropertySubject.value;
   }
 
-  // Using dummy data for dashboard statistics
   getPropertyStats(propertyId: string, startDate: Date, endDate: Date): Observable<PropertyStats> {
-    return new Observable(observer => {
-      observer.next({
-        totalRooms: 50,
-        occupiedRooms: 42,
-        vacantRooms: 8,
-        totalTenants: 45,
-        totalRevenue: 250000,
-        collectedRent: 175000,
-        pendingRent: 75000,
-        totalExpenses: 75000,
-        netIncome: 175000,
-        occupancyRate: 84,
-        revenueByFloor: [
-          { floor: 1, revenue: 62500 },
-          { floor: 2, revenue: 58000 },
-          { floor: 3, revenue: 65000 },
-          { floor: 4, revenue: 64500 }
-        ],
-        expensesByCategory: [
-          { category: 'Maintenance', amount: 25000 },
-          { category: 'Utilities', amount: 30000 },
-          { category: 'Staff', amount: 15000 },
-          { category: 'Others', amount: 5000 }
-        ]
-      });
-    });
+    const params = new HttpParams()
+      .set('startDate', startDate.toISOString())
+      .set('endDate', endDate.toISOString());
+
+    return this.httpCommon.get<PropertyStats>(`${this.API_URL}/stats/${propertyId}`, { params });
   }
 } 

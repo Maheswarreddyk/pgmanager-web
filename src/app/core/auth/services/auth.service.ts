@@ -38,7 +38,7 @@ export class AuthService {
   ) {
     console.log('AuthService constructor - Initializing auth state');
     try {
-      const storedUser = localStorage.getItem('currentUser');
+    const storedUser = localStorage.getItem('currentUser');
       const token = localStorage.getItem('token');
       
       if (storedUser && storedUser !== 'undefined' && token) {
