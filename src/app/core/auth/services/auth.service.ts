@@ -29,6 +29,8 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   private readonly API_URL = `${environment.apiUrl}/auth`;
+  private readonly TOKEN_KEY = 'token';
+  private readonly USER_KEY = 'currentUser';
 
   constructor(
     private http: HttpClient,
@@ -36,22 +38,22 @@ export class AuthService {
     private router: Router,
     private propertyService: PropertyService
   ) {
-    console.log('AuthService constructor - Initializing auth state');
+    this.initializeAuthState();
+  }
+
+  private initializeAuthState(): void {
     try {
-    const storedUser = localStorage.getItem('currentUser');
-      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem(this.USER_KEY);
+      const token = localStorage.getItem(this.TOKEN_KEY);
       
       if (storedUser && storedUser !== 'undefined' && token) {
         const parsedUser = JSON.parse(storedUser);
         if (parsedUser && parsedUser.id && parsedUser.email && parsedUser.name) {
-          console.log('Found valid stored user and token');
           this.currentUserSubject.next(parsedUser);
         } else {
-          console.log('Invalid stored user data, clearing auth state');
           this.clearAuthState();
         }
       } else {
-        console.log('No stored auth state found');
         this.clearAuthState();
       }
     } catch (error) {
@@ -61,8 +63,8 @@ export class AuthService {
   }
 
   private clearAuthState(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('currentUser');
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem('selectedProperty');
     this.currentUserSubject.next(null);
   }
@@ -71,68 +73,42 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.API_URL}/login`, { email, password })
       .pipe(
         tap(response => {
-          console.log('Processing login response:', response);
-          
-          // Extract user data and token from response
+          if (!response.token) {
+            throw new Error('No token received from server');
+          }
+
           const userData = {
             id: response.id,
             email: response.email,
             name: `${response.firstName} ${response.lastName}`
           };
-          
-          const token = response.token;
-          
-          if (!token || !userData.id || !userData.email) {
-            console.error('Missing required auth data');
-            return;
-          }
 
-          // Set the user in memory first
+          // Store auth data
+          localStorage.setItem(this.TOKEN_KEY, response.token);
+          localStorage.setItem(this.USER_KEY, JSON.stringify(userData));
           this.currentUserSubject.next(userData);
-          
-          // Then store in localStorage
-          localStorage.setItem('token', token);
-          localStorage.setItem('currentUser', JSON.stringify(userData));
-          
-          console.log('Auth state set - User in memory:', !!this.currentUserSubject.value);
-          console.log('Auth state set - Token in storage:', !!localStorage.getItem('token'));
-          
-          // Verify complete auth state
-          const isValid = this.verifyAuthState();
-          
-          if (isValid) {
-            console.log('Authentication verified, proceeding with property selection');
-            this.checkAndHandlePropertySelection();
-          } else {
-            console.error('Failed to establish valid auth state');
-            this.clearAuthState();
+
+          // Verify auth state
+          if (!this.verifyAuthState()) {
+            throw new Error('Failed to establish valid auth state');
           }
         })
       );
   }
 
   private verifyAuthState(): boolean {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('currentUser');
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    const storedUser = localStorage.getItem(this.USER_KEY);
     const memoryUser = this.currentUserSubject.value;
     
-    console.log('Verifying auth state components:');
-    console.log('- Token:', !!token);
-    console.log('- Stored user:', !!storedUser);
-    console.log('- Memory user:', !!memoryUser);
-    
     if (!token || !storedUser || !memoryUser) {
-      console.error('Missing auth state component');
       return false;
     }
     
     try {
       const parsedUser = JSON.parse(storedUser);
-      const isValid = !!(parsedUser.id && parsedUser.email && parsedUser.name);
-      console.log('Stored user validation:', isValid);
-      return isValid;
+      return !!(parsedUser.id && parsedUser.email && parsedUser.name);
     } catch (e) {
-      console.error('Failed to parse stored user:', e);
       return false;
     }
   }
@@ -150,8 +126,8 @@ export class AuthService {
             name: `${response.firstName} ${response.lastName}`
           };
           
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('currentUser', JSON.stringify(userData));
+          localStorage.setItem(this.TOKEN_KEY, response.token);
+          localStorage.setItem(this.USER_KEY, JSON.stringify(userData));
           this.currentUserSubject.next(userData);
           this.checkAndHandlePropertySelection();
         })
@@ -159,23 +135,22 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('selectedProperty');
-    this.currentUserSubject.next(null);
+    this.clearAuthState();
+    this.router.navigate(['/login']);
   }
 
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(this.TOKEN_KEY);
     const user = this.currentUserSubject.value;
-    console.log('isAuthenticated check - Token:', !!token, 'User:', !!user);
     return !!(token && user);
   }
 
   getToken(): string | null {
-    const token = localStorage.getItem('token');
-    console.log('getToken called - retrieved token:', token);
-    return token;
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
   }
 
   private checkAndHandlePropertySelection(): void {

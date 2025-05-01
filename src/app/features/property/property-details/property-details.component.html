@@ -5,7 +5,7 @@
     <p-button 
       label="Add Room" 
       icon="pi pi-plus" 
-      (onClick)="openAddRoomDialog()"
+      (click)="openAddRoomDialog()"
       [rounded]="true"
       severity="success">
     </p-button>
@@ -25,6 +25,7 @@
         <div class="grid">
           <div class="col-12 md:col-6 lg:col-4" *ngFor="let room of floor.rooms">
             <div class="surface-0 p-4 border-1 border-round surface-border"
+                 [ngClass]="getOccupancyClass(room)"
                  style="transition: transform 0.2s; cursor: pointer;"
                  (mouseenter)="room.hover = true" 
                  (mouseleave)="room.hover = false"
@@ -37,26 +38,14 @@
               </div>
 
               <div class="mb-4">
-                <p class="flex align-items-center gap-2 text-700 mb-2">
-                  <i class="pi pi-users"></i>
-                  <span>Capacity: {{room.roomCapacity}} persons</span>
-                </p>
-                <p class="flex align-items-center gap-2 text-700 mb-3">
-                  <i class="pi pi-money-bill"></i>
-                  <span>Rent: ₹{{room.amountPerHead}}/month</span>
-                </p>
-                
-                <div [ngClass]="{
-                  'inline-flex align-items-center gap-2 border-round-lg px-3 py-2': true,
-                  'bg-red-100 text-red-700': getOccupancyClass(room) === 'vacant',
-                  'bg-orange-100 text-orange-700': getOccupancyClass(room) === 'partially-occupied',
-                  'bg-green-100 text-green-700': getOccupancyClass(room) === 'fully-occupied'
-                }">
-                  <i class="pi" [ngClass]="{'pi-check-circle': room.tenantsCount === room.roomCapacity, 
-                                          'pi-exclamation-circle': room.tenantsCount === 0,
-                                          'pi-users': room.tenantsCount > 0 && room.tenantsCount < room.roomCapacity}">
-                  </i>
-                  <span class="font-semibold">{{getOccupancyText(room)}}</span>
+                <div class="flex align-items-center gap-3 mb-3">
+                  <i class="pi pi-money-bill text-xl"></i>
+                  <span class="text-900">₹{{room.amountPerHead}}/month</span>
+                </div>
+
+                <div class="flex align-items-center gap-3 mb-3">
+                  <i class="pi pi-users text-xl"></i>
+                  <span class="text-900">{{getOccupancyText(room)}}</span>
                 </div>
               </div>
 
@@ -65,7 +54,8 @@
                   label="Add Tenant" 
                   icon="pi pi-user-plus" 
                   [disabled]="room.tenantsCount >= room.roomCapacity"
-                  class="p-button-success flex-1">
+                  class="p-button-success flex-1"
+                  (click)="addTenant(room)">
                 </button>
                 <button pButton 
                   label="View Details" 
@@ -79,4 +69,18 @@
       </div>
     </p-accordionTab>
   </p-accordion>
-</div> 
+</div>
+
+<style>
+.vacant {
+  border-left: 4px solid var(--green-500) !important;
+}
+
+.partially-occupied {
+  border-left: 4px solid var(--yellow-500) !important;
+}
+
+.fully-occupied {
+  border-left: 4px solid var(--blue-500) !important;
+}
+</style> 

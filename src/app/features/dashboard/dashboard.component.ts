@@ -156,32 +156,32 @@ export class DashboardComponent implements OnInit {
   private loadDashboardData(): void {
     // Load properties data
     this.propertyService.getProperties().subscribe({
-      next: (properties) => {
+      next: (properties: Property[]) => {
         this.totalProperties = properties.length;
         this.vacantRooms = properties.reduce((acc, property) => 
           acc + (property.totalRooms - property.occupiedRooms), 0);
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Error loading properties:', error);
       }
     });
 
     // Load tenants data
     this.tenantService.getTenants().subscribe({
-      next: (tenants) => {
+      next: (tenants: Tenant[]) => {
         this.totalTenants = tenants.length;
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Error loading tenants:', error);
       }
     });
 
     // Load payments data
     this.paymentService.getMonthlyRevenue().subscribe({
-      next: (revenue) => {
+      next: (revenue: number) => {
         this.monthlyRevenue = revenue;
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Error loading revenue:', error);
       }
     });

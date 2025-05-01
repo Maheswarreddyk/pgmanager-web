@@ -30,7 +30,7 @@ export class AuthInterceptor implements HttpInterceptor {
       return next.handle(request);
     }
 
-    const token = localStorage.getItem('token');
+    const token = this.authService.getToken();
     console.log('Found token:', !!token);
 
     if (!token) {
